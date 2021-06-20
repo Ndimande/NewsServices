@@ -1,0 +1,82 @@
+﻿
+@page "/news" 
+@inject IHttpClientFactory _clientFactory
+<h3>News Data</h3>
+@if (string.IsNullOrWhiteSpace(errorString) == false)
+{
+   <div class="h2">@errorString</div>
+}
+else if (news is null)
+{
+    <div class="h4">Loading...</div>
+}
+else
+{
+<table class="table table-striped">
+    <thead class=" = " thead-dark>
+        <tr>
+            <th>Date</th>
+            <th>Headline</th>
+            <th>Text</th>
+            <th>Relevance Score</th>
+            <th>Source</th>
+            <th>Tags</th>
+        </tr>
+
+    </thead>
+    <tbody>
+        
+        @foreach (var n in news)
+        {
+            var comma = ", ";
+            <tr>
+                <td>@n.Date.ToShortDateString()</td>
+                <td>@n.Headline</td>
+                <td>@n.Text</td>
+                <td>@n.RelevanceScore</td>
+                <td>@n.Source</td>
+                <td>
+                    @for (var i = 0; i < n.Tags.Length; i++)
+                    {
+                        if (i != n.Tags.Length - 1)
+                        {
+                            @n.Tags[i]
+                            @comma
+                        }
+                        else
+                        {
+                            @n.Tags[i]
+                          
+                        }
+
+                    }
+                </td>
+            </tr>
+          
+        }
+    </tbody>
+</table>
+}
+@code {
+    NewsModel [] news;
+    string errorString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get,
+            "https://pastebin.com/raw/7RJzFSqW"
+            );
+        var client = _clientFactory.CreateClient();
+        HttpResponseMessage response = await client.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            news = await response.Content.ReadFromJsonAsync<NewsModel[]>();
+            errorString = null;
+        }
+        else
+        {
+            errorString = $"There was an error getting our news.: {response.ReasonPhrase }";
+        }
+    }
+}
